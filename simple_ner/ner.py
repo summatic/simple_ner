@@ -10,11 +10,12 @@ from .utils import get_process_memory
 
 class FeatureCountingNER:
     
-    def __init__(self, feature_manager=None, verbose=True, debug=False, debug_checkpoint=1000000):
+    def __init__(self, feature_manager=None, verbose=True, verbose_checkpoint=100000, debug=False, debug_checkpoint=1000000):
         self.feature_manager = feature_manager
         self.coefficient = {}
         self.coefficient_ = {}
         self.verbose = verbose
+        self._verbose_checkpoint = verbose_checkpoint
         self.debug = debug
         self._debug_checkpoint = debug_checkpoint
         
@@ -37,7 +38,7 @@ class FeatureCountingNER:
         begin_time = time.time()
 
         for num_z, (word, features) in enumerate(zcorpus):    
-            if self.verbose and num_z % 1000 == 0:
+            if self.verbose and num_z % self._verbose_checkpoint == 0:
                 args = (len(self.positive_features), (100 * num_z / len(zcorpus)), '%', num_z, len(zcorpus), remain_time(begin_time, num_z+1, len(zcorpus), initialize_time), get_process_memory())
                 sys.stdout.write('\rscanning positive features # = %d, (%.3f %s, %d in %d) %s %.3f Gb' % args)
 
@@ -90,7 +91,7 @@ class FeatureCountingNER:
         begin_time = time.time()
 
         for num_z, (word, features) in enumerate(zcorpus):
-            if self.verbose and num_z % 1000 == 0:
+            if self.verbose and num_z % self._verbose_checkpoint == 0:
                 args = ((100 * num_z / len(zcorpus)), '%', num_z, len(zcorpus), remain_time(begin_time, num_z+1, len(zcorpus)), get_process_memory())
                 sys.stdout.write('\r# scanning usage of positive features (%.3f %s, %d in %d) %s %.3f Gb' % args)
 
@@ -135,7 +136,7 @@ class FeatureCountingNER:
                 _topk_ners = normalize_score(prediction_score, prediction_count)
                 _topk_ners = list(sorted(_topk_ners.items(), key=lambda x:x[1], reverse=True))
                 debugmessage = get_debugmessage(_topk_ners)
-            if self.verbose and num_z % 1000 == 0:
+            if self.verbose and num_z % self._verbose_checkpoint == 0:
                 args = (num_z, len(zcorpus), 100 * num_z / len(zcorpus), '%', remain_time(begin_time, num_z+1, len(zcorpus)), get_process_memory())
                 message = 'extract_named_entities_from_zcorpus ... (%d in %d, %.3f %s) %s %.3f Gb' % args
                 message += ' '*(100-min(100,len(message))) + debugmessage
